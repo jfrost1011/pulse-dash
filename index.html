@@ -237,7 +237,7 @@ if(orbs[i].y>H+50)orbs.splice(i,1);
 
 // Player position lerp
 const targetX=LANE_W*playerLane+LANE_W/2;
-playerX+=(targetX-playerX)*0.25;
+playerX+=(targetX-playerX)*0.55;
 
 // Trail
 if(frameCount%2===0)addTrail(playerX,playerY+10,th.player);
