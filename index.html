@@ -147,7 +147,7 @@ life:20,maxLife:20,color,size:Math.random()*3+1});
 }
 
 // ===== OBSTACLES & ORBS =====
-let spawnTimer=0,spawnInterval=80;
+let spawnTimer=0,spawnInterval=25;
 function spawnObstacle(){
 // Pick a gap lane (or two for easier)
 const gaps=adaptiveDiff>1.3?1:adaptiveDiff<0.7?3:2;
@@ -178,7 +178,7 @@ const recent=successHistory.slice(-20);
 const rate=recent.filter(s=>s).length/recent.length;
 if(rate>0.85){adaptiveDiff=Math.min(adaptiveDiff+0.02,2);targetSpeed=baseSpeed*(1+adaptiveDiff*0.3)}
 else if(rate<0.6){adaptiveDiff=Math.max(adaptiveDiff-0.03,0.5);targetSpeed=baseSpeed*(1+adaptiveDiff*0.3)}
-spawnInterval=Math.max(35,80-adaptiveDiff*20);
+spawnInterval=Math.max(12,25-adaptiveDiff*6);
 }
 
 // ===== INPUT =====
