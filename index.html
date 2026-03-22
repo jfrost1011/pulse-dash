@@ -79,10 +79,11 @@ const THEMES=[
 // ===== GAME STATE =====
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
-let W,H,LANE_W,LANES=3,playerLane=1,playerX,playerY;
+let W,H,LANE_W,LANES=3,playerLane=1,playerX,playerY,playerBaseY;
 let obstacles=[],orbs=[],particles=[];
 let score=0,combo=0,maxCombo=0,totalOrbs=0,runOrbs=0;
-let speed=3,baseSpeed=3,targetSpeed=3;
+let speed=4,baseSpeed=4,targetSpeed=4;
+let playerBoost=0; // upward boost on tap
 let xp=0,level=1,xpToNext=100;
 let gameState='title'; // title, playing, dead, super
 let superTimer=0,superDuration=180; // 3s at 60fps
@@ -128,7 +129,8 @@ function resize(){
 W=canvas.width=window.innerWidth*devicePixelRatio;
 H=canvas.height=window.innerHeight*devicePixelRatio;
 LANE_W=W/LANES;
-playerY=H*0.8;
+playerBaseY=H*0.75;
+playerY=playerBaseY;
 playerX=LANE_W*playerLane+LANE_W/2;
 }
 window.addEventListener('resize',resize);
@@ -187,6 +189,7 @@ if(gameState==='dead')return;
 const newLane=x<W/2?Math.max(0,playerLane-1):Math.min(LANES-1,playerLane+1);
 if(newLane!==playerLane){
 playerLane=newLane;
+playerBoost=-8; // dash upward on tap
 sndDash();vib(10);
 addParticles(playerX,playerY,theme().player,5,2,15);
 }
@@ -235,12 +238,18 @@ orbs[i].y+=speed;
 if(orbs[i].y>H+50)orbs.splice(i,1);
 }
 
-// Player position lerp
+// Player position lerp (horizontal)
 const targetX=LANE_W*playerLane+LANE_W/2;
 playerX+=(targetX-playerX)*0.55;
 
-// Trail
-if(frameCount%2===0)addTrail(playerX,playerY+10,th.player);
+// Player vertical movement: dash up on tap, drift back down
+playerY+=playerBoost;
+playerBoost*=0.9; // decelerate
+playerY+=(playerBaseY-playerY)*0.06; // drift back to base
+if(playerY>playerBaseY)playerY=playerBaseY;
+
+// Trail (goes downward behind player to show forward motion)
+if(frameCount%2===0)addTrail(playerX,playerY+12,th.player);
 
 // Collision with orbs
 for(const o of orbs){
