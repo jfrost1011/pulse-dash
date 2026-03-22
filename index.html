@@ -58,6 +58,7 @@ function sndDeath(){playTone(200,.3,'sawtooth',.15);playTone(100,.4,'sawtooth',.
 function sndLevelUp(){for(let i=0;i<5;i++)setTimeout(()=>playTone(600+i*150,.15,'sine',.1),i*60)}
 function sndGolden(){playTone(1400,.15,'sine',.15);playTone(1800,.12,'sine',.1);playTone(2200,.1,'sine',.08)}
 function sndSuper(){for(let i=0;i<8;i++)setTimeout(()=>playTone(400+i*200,.1,'square',.06),i*40)}
+function sndHazard(){playTone(150,.2,'sawtooth',.2);playTone(250,.15,'square',.1)}
 function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
 
 // ===== THEMES =====
@@ -80,7 +81,7 @@ const THEMES=[
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
 let W,H,LANE_W,LANES=3,playerLane=1,playerX,playerY,playerBaseY;
-let obstacles=[],orbs=[],particles=[];
+let obstacles=[],orbs=[],hazards=[],particles=[];
 let score=0,combo=0,maxCombo=0,totalOrbs=0,runOrbs=0;
 let speed=35,baseSpeed=35,targetSpeed=35;
 let playerBoost=0; // upward boost on tap
@@ -162,9 +163,12 @@ if(!gapLanes.includes(l)){
 obstacles.push({x:LANE_W*l,y:-wallH,w:LANE_W,h:wallH,lane:l});
 }
 }
-// Orbs in gap lanes
+// Orbs and hazards in gap lanes
 for(const gl of gapLanes){
-if(Math.random()<0.7){
+if(Math.random()<0.25){
+// Red hazard dot
+hazards.push({x:LANE_W*gl+LANE_W/2,y:-20,r:8,hit:false});
+} else if(Math.random()<0.7){
 const golden=Math.random()<0.05;
 orbs.push({x:LANE_W*gl+LANE_W/2,y:-20,r:golden?10:7,golden,collected:false});
 }
@@ -238,6 +242,12 @@ orbs[i].y+=speed;
 if(orbs[i].y>H+50)orbs.splice(i,1);
 }
 
+// Move hazards
+for(let i=hazards.length-1;i>=0;i--){
+hazards[i].y+=speed;
+if(hazards[i].y>H+50)hazards.splice(i,1);
+}
+
 // Player position lerp (horizontal)
 const targetX=LANE_W*playerLane+LANE_W/2;
 playerX+=(targetX-playerX)*0.55;
@@ -261,6 +271,20 @@ score+=val*(combo+1)*5;
 if(o.golden){sndGolden();addParticles(o.x,o.y,'#ffd600',20,5,50);vib(30);
 showMsg('✨ GOLDEN! ✨',800)}
 else{sndOrb();addParticles(o.x,o.y,th.orb,8,3,25)}
+}
+}
+
+// Collision with hazards (red dots)
+for(const h of hazards){
+if(!h.hit&&Math.abs(h.x-playerX)<25&&Math.abs(h.y-playerY)<25){
+h.hit=true;
+if(totalOrbsAll>0)totalOrbsAll--;
+sndHazard();vib([30,20,50]);
+shakeAmt=Math.max(shakeAmt,8);
+addParticles(h.x,h.y,'#ff1744',15,4,30);
+showMsg('💔 -1 GEM',600);
+combo=0;
+document.getElementById('combo').classList.remove('visible');
 }
 }
 
@@ -366,7 +390,7 @@ if(deathTimer<=0){
 // Auto restart
 gameState='playing';
 score=0;combo=0;runOrbs=0;
-playerLane=1;obstacles=[];orbs=[];
+playerLane=1;obstacles=[];orbs=[];hazards=[];
 speed=baseSpeed;targetSpeed=baseSpeed;
 spawnTimer=0;
 document.getElementById('combo').classList.remove('visible');
@@ -437,6 +461,20 @@ ctx.fill();
 ctx.beginPath();
 ctx.arc(o.x,o.y,o.r+glow+pulse,0,Math.PI*2);
 ctx.fillStyle=(o.golden?'#ffd600':'rgba(0,255,255,')+('0.1)');
+ctx.fill();
+}
+
+// Hazards (red dots)
+for(const h of hazards){
+if(h.hit)continue;
+const pulse=Math.sin(frameCount*0.15)*2;
+ctx.beginPath();
+ctx.arc(h.x,h.y,h.r+pulse,0,Math.PI*2);
+ctx.fillStyle='#ff1744';
+ctx.fill();
+ctx.beginPath();
+ctx.arc(h.x,h.y,h.r+12+pulse,0,Math.PI*2);
+ctx.fillStyle='rgba(255,23,68,0.15)';
 ctx.fill();
 }
 
