@@ -306,14 +306,20 @@ const earnedXP=Math.floor(score/10)+combo*2;
 xp+=earnedXP;
 while(xp>=xpToNext){xp-=xpToNext;level++;xpToNext=Math.floor(xpToNext*1.2);
 sndLevelUp();showMsg('⚡ LEVEL '+level+'! ⚡',1200);
-// Check theme unlocks
+// Unlock themes and auto-switch every 5 levels
 for(let t=0;t<THEMES.length;t++){
 if(THEMES[t].unlock<=level&&!unlockedThemes.includes(t)){
-unlockedThemes.push(t);currentTheme=t;
-setTimeout(()=>{const el=document.getElementById('theme-unlock');
-el.textContent='🎨 '+THEMES[t].name+' unlocked!';el.style.color=THEMES[t].player;
-el.classList.add('visible');setTimeout(()=>el.classList.remove('visible'),2000)},1300);
+unlockedThemes.push(t);
 }}
+if(level%5===0){
+// Cycle to next unlocked theme
+const ci=unlockedThemes.indexOf(currentTheme);
+const nextTheme=unlockedThemes[(ci+1)%unlockedThemes.length];
+currentTheme=nextTheme;
+setTimeout(()=>{const el=document.getElementById('theme-unlock');
+el.textContent='🎨 '+THEMES[nextTheme].name+'!';el.style.color=THEMES[nextTheme].player;
+el.classList.add('visible');setTimeout(()=>el.classList.remove('visible'),2000)},1300);
+}
 }
 save();
 break;
@@ -489,30 +495,51 @@ ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size*a,p.size*a);
 }
 ctx.globalAlpha=1;
 
-// Player
+// Player (stick figure)
 if(gameState!=='dead'){
 const px=playerX,py=playerY;
-const pr=14;
-// Glow
-const glowR=gameState==='super'?50:25;
-const grad=ctx.createRadialGradient(px,py,pr*0.5,px,py,glowR);
 let pColor=th.player;
 if(th.rainbow)pColor=`hsl(${hue},100%,70%)`;
 if(gameState==='super')pColor=th.accent;
-grad.addColorStop(0,pColor);
+// Glow behind stick figure
+const glowR=gameState==='super'?50:30;
+const grad=ctx.createRadialGradient(px,py-10,5,px,py-10,glowR);
+grad.addColorStop(0,pColor+'80');
 grad.addColorStop(1,'transparent');
 ctx.fillStyle=grad;
-ctx.fillRect(px-glowR,py-glowR,glowR*2,glowR*2);
-// Core
+ctx.fillRect(px-glowR,py-10-glowR,glowR*2,glowR*2);
+// Running animation
+const run=Math.sin(frameCount*0.3)*4;
+const armSwing=Math.sin(frameCount*0.3)*6;
+const legSwing=Math.sin(frameCount*0.3)*8;
+ctx.strokeStyle=pColor;
+ctx.lineWidth=3;
+ctx.lineCap='round';
+// Head
 ctx.beginPath();
-ctx.arc(px,py,pr,0,Math.PI*2);
-ctx.fillStyle=pColor;
-ctx.fill();
-// Inner shine
+ctx.arc(px,py-28,6,0,Math.PI*2);
+ctx.stroke();
+// Body
 ctx.beginPath();
-ctx.arc(px-3,py-3,pr*0.4,0,Math.PI*2);
-ctx.fillStyle='rgba(255,255,255,0.4)';
-ctx.fill();
+ctx.moveTo(px,py-22);
+ctx.lineTo(px,py-6);
+ctx.stroke();
+// Arms
+ctx.beginPath();
+ctx.moveTo(px-8-armSwing,py-12);
+ctx.lineTo(px,py-18);
+ctx.lineTo(px+8+armSwing,py-12);
+ctx.stroke();
+// Left leg
+ctx.beginPath();
+ctx.moveTo(px,py-6);
+ctx.lineTo(px-6-legSwing,py+8);
+ctx.stroke();
+// Right leg
+ctx.beginPath();
+ctx.moveTo(px,py-6);
+ctx.lineTo(px+6+legSwing,py+8);
+ctx.stroke();
 }
 
 ctx.restore();
