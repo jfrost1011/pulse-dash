@@ -83,7 +83,7 @@ const ctx=canvas.getContext('2d');
 let W,H,LANE_W,LANES=3,playerLane=1,playerX,playerY,playerBaseY;
 let obstacles=[],orbs=[],hazards=[],particles=[];
 let score=0,combo=0,maxCombo=0,totalOrbs=0,runOrbs=0;
-let speed=35,baseSpeed=35,targetSpeed=35;
+let speed=4,baseSpeed=4,targetSpeed=4;
 let playerBoost=0; // upward boost on tap
 let xp=0,level=1,xpToNext=100;
 let gameState='title'; // title, playing, dead, super
@@ -305,6 +305,7 @@ else showDeath(DEATH_MSGS[Math.floor(Math.random()*DEATH_MSGS.length)]);
 const earnedXP=Math.floor(score/10)+combo*2;
 xp+=earnedXP;
 while(xp>=xpToNext){xp-=xpToNext;level++;xpToNext=Math.floor(xpToNext*1.2);
+baseSpeed=4+level*1.5;targetSpeed=baseSpeed;
 sndLevelUp();showMsg('⚡ LEVEL '+level+'! ⚡',1200);
 // Unlock themes and auto-switch every 5 levels
 for(let t=0;t<THEMES.length;t++){
@@ -397,7 +398,7 @@ if(deathTimer<=0){
 gameState='playing';
 score=0;combo=0;runOrbs=0;
 playerLane=1;obstacles=[];orbs=[];hazards=[];
-speed=baseSpeed;targetSpeed=baseSpeed;
+baseSpeed=4+level*1.5;speed=baseSpeed;targetSpeed=baseSpeed;
 spawnTimer=0;
 document.getElementById('combo').classList.remove('visible');
 hideMsg();
